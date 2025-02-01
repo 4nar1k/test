@@ -7,29 +7,38 @@ import (
 	"net/http"
 )
 
-var task string
-
-type TaskRequest struct {
-	Task string `json:"task"`
-}
-
 func GetHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, %s", task)
+	var messages []Message
+	result := db.Find(&messages)
+	if result.Error != nil {
+		http.Error(w, "Error fetching messages", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(messages)
 }
+
 func PostHandler(w http.ResponseWriter, r *http.Request) {
-	var taskReq TaskRequest
-	err := json.NewDecoder(r.Body).Decode(&taskReq)
+	var messageReq Message
+	err := json.NewDecoder(r.Body).Decode(&messageReq)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	task = taskReq.Task
+	result := db.Create(&messageReq)
+	if result.Error != nil {
+		http.Error(w, "Error creating message", http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "Task updated successfully")
+	fmt.Fprint(w, "Message created successfully")
 }
+
 func main() {
+	InitDB()
+	db.AutoMigrate(&Message{})
 	router := mux.NewRouter()
-	router.HandleFunc("/api/hello", GetHandler).Methods("GET")
-	router.HandleFunc("/api/hello", PostHandler).Methods("POST")
+	router.HandleFunc("/api/messages", GetHandler).Methods("GET")
+	router.HandleFunc("/api/messages", PostHandler).Methods("POST")
 	http.ListenAndServe(":8080", router)
 }
