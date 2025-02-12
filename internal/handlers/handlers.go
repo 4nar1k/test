@@ -87,7 +87,7 @@ func (h *Handler) PatchTaskHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid Content-Type", http.StatusUnsupportedMediaType)
 		return
 	}
-
+ 
 	var task taskService.Task
 	err = json.NewDecoder(r.Body).Decode(&task) // Декодируем JSON в структуру
 	if err != nil {
