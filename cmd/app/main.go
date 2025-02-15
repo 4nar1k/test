@@ -14,9 +14,6 @@ func main() {
 	if database.DB == nil {
 		log.Fatal("Database connection is not initialized")
 	}
-	database.DB.AutoMigrate(&taskService.Task{})
-
-	database.DB.AutoMigrate(&taskService.Task{})
 
 	repo := taskService.NewTaskRepository(database.DB)
 
