@@ -3,29 +3,41 @@ package main
 import (
 	"apiRUKA/internal/database"
 	"apiRUKA/internal/handlers"
+	"apiRUKA/internal/middleware"
 	"apiRUKA/internal/taskService"
-	"github.com/gorilla/mux"
+	"apiRUKA/internal/web/tasks"
+	"github.com/labstack/echo/v4"
+	echomiddleware "github.com/labstack/echo/v4/middleware"
 	"log"
-	"net/http"
 )
 
 func main() {
+	// Инициализация базы данных
 	database.InitDB()
-	if database.DB == nil {
-		log.Fatal("Database connection is not initialized")
-	}
 
+	// Создание репозитория и сервиса
 	repo := taskService.NewTaskRepository(database.DB)
-
 	service := taskService.NewTaskService(repo)
 
+	// Создание обработчика
 	handler := handlers.NewHandler(service)
 
-	router := mux.NewRouter()
+	// Инициализация Echo
+	e := echo.New()
 
-	router.HandleFunc("/api/messages", handler.GetTasksHandler).Methods("GET")
-	router.HandleFunc("/api/messages", handler.PostTaskHandler).Methods("POST")
-	router.HandleFunc("/api/messages/{id}", handler.PatchTaskHandler).Methods("PATCH")
-	router.HandleFunc("/api/messages/{id}", handler.DeleteTaskHandler).Methods("DELETE")
-	http.ListenAndServe(":8080", router)
+	// Подключение стандартных middleware
+	e.Use(echomiddleware.Logger())
+	e.Use(echomiddleware.Recover())
+
+	// Middleware для связывания context.Context и echo.Context
+	e.Use(middleware.AttachEchoContextMiddleware)
+
+	// Регистрация обработчиков
+	strictHandler := tasks.NewStrictHandler(handler, nil)
+	tasks.RegisterHandlers(e, strictHandler)
+
+	// Запуск сервера
+	if err := e.Start(":8080"); err != nil {
+		log.Fatalf("failed to start with err: %v", err)
+	}
 }
