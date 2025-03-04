@@ -13,7 +13,7 @@ type Handler struct {
 }
 
 // NewHandler создает новый экземпляр Handler
-func NewHandler(service *taskService.TaskService) *Handler {
+func NewTaskHandler(service *taskService.TaskService) *Handler {
 	return &Handler{
 		Service: service,
 	}

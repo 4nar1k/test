@@ -5,7 +5,9 @@ import (
 	"apiRUKA/internal/handlers"
 	"apiRUKA/internal/middleware"
 	"apiRUKA/internal/taskService"
+	"apiRUKA/internal/userService"
 	"apiRUKA/internal/web/tasks"
+	"apiRUKA/internal/web/users"
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 	"log"
@@ -15,12 +17,17 @@ func main() {
 	// Инициализация базы данных
 	database.InitDB()
 
-	// Создание репозитория и сервиса
-	repo := taskService.NewTaskRepository(database.DB)
-	service := taskService.NewTaskService(repo)
+	// Создание репозиториев
+	tasksRepo := taskService.NewTaskRepository(database.DB)
+	userRepo := userService.NewUserRepository(database.DB)
 
-	// Создание обработчика
-	handler := handlers.NewHandler(service)
+	// Создание сервисов
+	tasksService := taskService.NewTaskService(tasksRepo)
+	userService := userService.NewUserService(userRepo)
+
+	// Создание обработчиков
+	tasksHandler := handlers.NewTaskHandler(tasksService)
+	userHandler := handlers.NewUserHandler(userService)
 
 	// Инициализация Echo
 	e := echo.New()
@@ -33,8 +40,11 @@ func main() {
 	e.Use(middleware.AttachEchoContextMiddleware)
 
 	// Регистрация обработчиков
-	strictHandler := tasks.NewStrictHandler(handler, nil)
-	tasks.RegisterHandlers(e, strictHandler)
+	tasksStrictHandler := tasks.NewStrictHandler(tasksHandler, nil)
+	usersStrictHandler := users.NewStrictHandler(userHandler, nil)
+
+	tasks.RegisterHandlers(e, tasksStrictHandler)
+	users.RegisterHandlers(e, usersStrictHandler)
 
 	// Запуск сервера
 	if err := e.Start(":8080"); err != nil {
