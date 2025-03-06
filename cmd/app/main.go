@@ -23,7 +23,7 @@ func main() {
 
 	// Создание сервисов
 	tasksService := taskService.NewTaskService(tasksRepo)
-	userService := userService.NewUserService(userRepo)
+	userService := userService.NewUserService(userRepo, tasksService)
 
 	// Создание обработчиков
 	tasksHandler := handlers.NewTaskHandler(tasksService)
