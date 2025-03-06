@@ -6,16 +6,12 @@ import (
 )
 
 type UserRepository interface {
-	// CreateUser - Создает нового пользователя и возвращает его
 	CreateUser(user models.User) (models.User, error)
-	// GetAllUsers - Возвращает массив всех пользователей из БД
 	GetAllUsers() ([]models.User, error)
-	// GetUserByID - Возвращает пользователя по ID
 	GetUserByID(id uint) (models.User, error)
-	// UpdateUserByID - Обновляет данные пользователя по ID
 	UpdateUserByID(id uint, user models.User) (models.User, error)
-	// DeleteUserByID - Удаляет пользователя по ID
 	DeleteUserByID(id uint) error
+	GetDB() *gorm.DB // Новый метод
 }
 
 type userRepository struct {
@@ -63,4 +59,8 @@ func (r *userRepository) UpdateUserByID(id uint, user models.User) (models.User,
 func (r *userRepository) DeleteUserByID(id uint) error {
 	result := r.db.Delete(&models.User{}, id)
 	return result.Error
+}
+
+func (r *userRepository) GetDB() *gorm.DB {
+	return r.db
 }
