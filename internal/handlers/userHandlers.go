@@ -47,7 +47,6 @@ func (h *UserHandler) PostUsers(ctx context.Context, request users.PostUsersRequ
 		return nil, err
 	}
 
-	// Преобразование структуры в OpenAPI-модель
 	response := users.User{
 		Id:    &newUser.ID,
 		Email: &newUser.Email,
