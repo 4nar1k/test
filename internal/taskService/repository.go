@@ -42,15 +42,20 @@ func (r *taskRepository) GetTasksByUserID(userID uint) ([]models.Task, error) {
 }
 
 func (r *taskRepository) UpdateTaskByID(id uint, task models.Task) (models.Task, error) {
-	var existing models.Task
-	if err := r.db.First(&existing, id).Error; err != nil {
+	var existingTask models.Task
+	if err := r.db.First(&existingTask, id).Error; err != nil {
 		return models.Task{}, err
 	}
-	result := r.db.Model(&existing).Updates(task)
+
+	existingTask.Task = task.Task
+	existingTask.IsDone = task.IsDone
+
+	result := r.db.Save(&existingTask)
 	if result.Error != nil {
 		return models.Task{}, result.Error
 	}
-	return existing, nil
+
+	return existingTask, nil
 }
 
 func (r *taskRepository) DeleteTaskByID(id uint) error {
